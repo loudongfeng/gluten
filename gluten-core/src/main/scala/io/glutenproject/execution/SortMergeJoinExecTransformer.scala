@@ -30,8 +30,7 @@ import org.apache.spark.sql.vectorized.ColumnarBatch
 import com.google.protobuf.{Any, StringValue}
 import io.substrait.proto.JoinRel
 
-/** Performs a sort merge join of two child relations. */
-case class SortMergeJoinExecTransformer(
+abstract class SortMergeJoinExecTransformerBase(
     leftKeys: Seq[Expression],
     rightKeys: Seq[Expression],
     joinType: JoinType,
@@ -41,7 +40,6 @@ case class SortMergeJoinExecTransformer(
     isSkewJoin: Boolean = false)
   extends ColumnarShuffledJoin
   with TransformSupport {
-
   // Note: "metrics" is made transient to avoid sending driver-side metrics to tasks.
   @transient override lazy val metrics =
     BackendsApiManager.getMetricsApiInstance.genSortMergeJoinTransformerMetrics(sparkContext)
@@ -228,6 +226,28 @@ case class SortMergeJoinExecTransformer(
 
     JoinUtils.createTransformContext(false, output, joinRel, inputStreamedOutput, inputBuildOutput)
   }
+
+}
+
+/** Performs a sort merge join of two child relations. */
+case class SortMergeJoinExecTransformer(
+    leftKeys: Seq[Expression],
+    rightKeys: Seq[Expression],
+    joinType: JoinType,
+    condition: Option[Expression],
+    left: SparkPlan,
+    right: SparkPlan,
+    isSkewJoin: Boolean = false,
+    projectList: Seq[NamedExpression] = null)
+  extends SortMergeJoinExecTransformerBase(
+    leftKeys,
+    rightKeys,
+    joinType,
+    condition,
+    left,
+    right,
+    isSkewJoin,
+    projectList) {
 
   override protected def withNewChildrenInternal(
       newLeft: SparkPlan,
