@@ -155,8 +155,8 @@ object ColumnarOverrideRules {
 
 case class ColumnarOverrideRules(session: SparkSession)
   extends ColumnarRule
-    with Logging
-    with LogLevelUtil {
+  with Logging
+  with LogLevelUtil {
 
   import ColumnarOverrideRules._
 
