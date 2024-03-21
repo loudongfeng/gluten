@@ -17,6 +17,7 @@
 package org.apache.spark.sql.catalyst
 
 import io.glutenproject.GlutenConfig
+import io.glutenproject.sql.shims.SparkShimLoader
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.catalyst.expressions.Cast
@@ -38,8 +39,9 @@ case class CHAggregateFunctionRewriteRule(spark: SparkSession) extends Rule[Logi
             if GlutenConfig.getConf.enableCastAvgAggregateFunction &&
               GlutenConfig.getConf.enableColumnarHashAgg &&
               !avgExpr.isDistinct && isDataTypeNeedConvert(avg.child.dataType) =>
+          val avgFunc = SparkShimLoader.getSparkShims.avgFunction(Cast(avg.child, DoubleType), avg)
           AggregateExpression(
-            Average(Cast(avg.child, DoubleType), avg.useAnsiAdd),
+            avgFunc,
             avgExpr.mode,
             avgExpr.isDistinct,
             avgExpr.filter,

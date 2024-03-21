@@ -29,7 +29,7 @@ import org.apache.spark.sql.{AnalysisException, SparkSession}
 import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.catalog.BucketSpec
 import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.catalyst.expressions.aggregate.BloomFilterAggregate
+import org.apache.spark.sql.catalyst.expressions.aggregate.{Average, BloomFilterAggregate}
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
 import org.apache.spark.sql.catalyst.plans.physical.{ClusteredDistribution, Distribution, KeyGroupedPartitioning, Partitioning}
 import org.apache.spark.sql.catalyst.rules.Rule
@@ -343,5 +343,10 @@ class Spark34Shims extends SparkShims {
       case _ =>
         filteredPartitions.flatten
     }
+  }
+
+
+  def avgFunction(newChild: Expression, originAvg: Average): Average = {
+    Average(newChild, originAvg.useAnsiAdd)
   }
 }
