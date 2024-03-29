@@ -185,7 +185,6 @@ class GlutenClickHouseTPCDSParquetSortMergeJoinSuite extends GlutenClickHouseTPC
     }
   }
 
-  // TODO enable this after CH support nulls smallest in MergeJoinTransform
   test("sort merge join: nulls smallest") {
     withTable("myitem") {
       withSQLConf(

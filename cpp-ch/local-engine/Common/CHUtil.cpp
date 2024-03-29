@@ -668,7 +668,6 @@ void BackendInitializerUtil::initContexts(DB::Context::ConfigurationPtr config)
 
         auto getDefaultPath = [config] -> auto
         {
-            
             const bool use_current_directory_as_tmp = config->getBool("use_current_directory_as_tmp", false);
             char buffer[PATH_MAX];
             if (use_current_directory_as_tmp && getcwd(buffer, sizeof(buffer)) != nullptr)
