@@ -23,15 +23,13 @@
 
 using BitInt128 = signed _BitInt(128);
 using BitUInt128 = unsigned _BitInt(128);
-#if defined(__x86_64__)
+#if defined (__x86_64__) || defined (__i386__)
+// up to version 19, clang supports large _Bitint sizes on x86 and x86-64;
+// but on arm and aarch64, they are currently only supported up to 128 bits.
+// https://github.com/llvm/llvm-project/blob/release/19.x/clang/include/clang/Basic/TargetInfo.h#L672
+// https://github.com/llvm/llvm-project/blob/release/19.x/clang/lib/Basic/Targets/X86.h#L506
 using BitInt256 = signed _BitInt(256);
 using BitUInt256 = unsigned _BitInt(256);
-#else
-// up to version 18, clang supports large _Bitint sizes on x86 and x86-64; 
-// but on arm and aarch64, they are currently only supported up to 128 bits.
-// https://stackoverflow.com/questions/78614816/why-am-i-getting-a-256-bit-arithmetic-error-unsigined-bitint-of-bit-sizes-gre
- using BitInt256 = Int256;
- using BitUInt256 = UInt256;
 #endif
 
 namespace local_engine
@@ -52,6 +50,7 @@ static bool canCastLower(const UInt128 & a, const UInt128 & b)
     return a.items[1] == 0 && b.items[1] == 0;
 }
 
+#if defined (__x86_64__) || defined (__i386__)
 static const Int256 & toInt256(const BitInt256 & value)
 {
     return *reinterpret_cast<const Int256 *>(&value);
@@ -61,6 +60,7 @@ static const BitInt256 & toBitInt256(const Int256 & value)
 {
     return *reinterpret_cast<const BitInt256 *>(&value);
 }
+#endif
 
 /// TODO(taiyang-li): remove all overflow checking in below codes because we have already checked overflow in SparkDecimalBinaryOperation
 struct DecimalPlusImpl
@@ -104,8 +104,12 @@ struct DecimalPlusImpl
             }
         }
 
+#if defined (__x86_64__) || defined (__i386__)
         r = toInt256(toBitInt256(a) + toBitInt256(b));
         chassert(r == a + b);
+#else
+        r = a + b;
+#endif
         return true;
     }
 
@@ -162,8 +166,12 @@ struct DecimalMinusImpl
             }
         }
 
+#if defined (__x86_64__) || defined (__i386__)
         r = toInt256(toBitInt256(a) - toBitInt256(b));
         chassert(r == a - b);
+#else
+        r = a - b;
+#endif
         return true;
     }
 
@@ -210,9 +218,13 @@ struct DecimalMultiplyImpl
     template <>
     static bool apply(Int256 a, Int256 b, Int256 & r)
     {
+#if defined (__x86_64__) || defined (__i386__)
         /// Notice that we can't use common::mulOverflow here because it doesn't support checking overflow on Int128 multiplication.
         r = toInt256(toBitInt256(a) * toBitInt256(b));
         chassert(r == a * b);
+#else
+        r = a * b;
+#endif
         return true;
     }
 
@@ -291,8 +303,12 @@ struct DecimalDivideImpl
             return true;
         }
 
+#if defined (__x86_64__) || defined (__i386__)
         r = toInt256(toBitInt256(a) / toBitInt256(b));
         chassert(r == a / b);
+#else
+        r = a / b;
+#endif
         return true;
     }
 
@@ -353,8 +369,12 @@ struct DecimalModuloImpl
             return true;
         }
 
+#if defined (__x86_64__) || defined (__i386__)
         r = toInt256(toBitInt256(a) % toBitInt256(b));
         chassert(r == a % b);
+#else
+        r = a % b;
+#endif
         return true;
     }
 
